@@ -118,6 +118,7 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	err = instanceRefreshService.Reconcile(ctx, minHealthyPercentage, filter)
 	if err != nil {
+		r.sendEvent(cp, v1.EventTypeWarning, "InstanceRefreshFailed", err.Error())
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 

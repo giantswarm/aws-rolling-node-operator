@@ -2,7 +2,6 @@ package refresh
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -123,11 +122,22 @@ func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercen
 			output, err := s.ASG.Client.DescribeInstanceRefreshes(refreshStatus)
 			if err != nil {
 				s.Scope.Logger.Error(err, "failed to describe instance refreshes")
-				return err
-
+				return backoff.Permanent(err)
 			}
-			if *output.InstanceRefreshes[0].Status == "Successful" {
+			if *output.InstanceRefreshes[0].Status == autoscaling.InstanceRefreshStatusSuccessful {
 				s.Scope.Logger.Info(fmt.Sprintf("Successfully refreshed all instances in ASG %s",
+					*output.InstanceRefreshes[0].AutoScalingGroupName))
+				return nil
+			}
+
+			if *output.InstanceRefreshes[0].Status == autoscaling.InstanceRefreshStatusCancelling {
+				s.Scope.Logger.Info(fmt.Sprintf("Cancelling refreshing instances in ASG %s",
+					*output.InstanceRefreshes[0].AutoScalingGroupName))
+				return nil
+			}
+
+			if *output.InstanceRefreshes[0].Status == autoscaling.InstanceRefreshStatusCancelled {
+				s.Scope.Logger.Info(fmt.Sprintf("Cancelled refreshing instances in ASG %s",
 					*output.InstanceRefreshes[0].AutoScalingGroupName))
 				return nil
 			}
@@ -135,15 +145,13 @@ func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercen
 			s.Scope.Logger.Info(fmt.Sprintf("Refreshing instances in ASG %s, Status: %s",
 				*output.InstanceRefreshes[0].AutoScalingGroupName,
 				*output.InstanceRefreshes[0].Status))
-			return errors.New("not ready yet")
+
+			return fmt.Errorf("ASG %s is not ready yet", *output.InstanceRefreshes[0].AutoScalingGroupName)
 		}
-		for {
-			err = backoff.Retry(waitonRefresh, b)
-			if err != nil {
-				s.Scope.Logger.Info("Waiting on refreshing instances, retrying ...")
-				continue
-			}
-			break
+		err = backoff.Retry(waitonRefresh, b)
+		if err != nil {
+			s.Scope.Logger.Error(err, "refreshing instances failed")
+			return err
 		}
 	}
 	return nil

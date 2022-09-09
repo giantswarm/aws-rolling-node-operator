@@ -104,6 +104,7 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	err = instanceRefreshService.Reconcile(ctx, minHealthyPercentage, nil)
 	if err != nil {
+		r.sendEvent(cluster, v1.EventTypeWarning, "InstanceRefreshFailed", err.Error())
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
