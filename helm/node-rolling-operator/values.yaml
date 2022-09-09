@@ -1,0 +1,30 @@
+aws:
+  accessKeyID: accesskey
+  secretAccessKey: secretkey
+  region: region
+
+installation:
+  name: name
+
+project:
+  branch: "[[ .Branch ]]"
+  commit: "[[ .SHA ]]"
+image:
+  name: "giantswarm/aws-rolling-node-operator"
+  tag: "[[ .Version ]]"
+registry:
+  domain: docker.io
+
+pod:
+  user:
+    id: 1000
+  group:
+    id: 1000
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 500Mi
+  requests:
+    cpu: 100m
+    memory: 250Mi

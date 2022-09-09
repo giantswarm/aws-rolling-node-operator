@@ -1,0 +1,22 @@
+domain: giantswarm.io
+layout:
+- go.kubebuilder.io/v3
+projectName: aws-rolling-node-operator
+repo: github.com/giantswarm/aws-rolling-node-operator
+resources:
+- controller: true
+  domain: giantswarm.io
+  group: infrastructure.cluster.x-k8s.io
+  kind: AWSCluster
+  version: v1alpha3
+- controller: true
+  domain: giantswarm.io
+  group: infrastructure.giantswarm.io
+  kind: AWSControlplane
+  version: v1alpha3
+- controller: true
+  domain: giantswarm.io
+  group: infrastructure.giantswarm.io
+  kind: AWSMachineDeployment
+  version: v1alpha3
+version: "3"
