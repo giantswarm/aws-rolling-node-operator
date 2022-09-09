@@ -34,7 +34,7 @@ func RefreshInstances(getter AnnotationsGetter) bool {
 }
 
 func MinHealthyPercentage(getter AnnotationsGetter) (int64, error) {
-	value, ok := getter.GetAnnotations()[RefreshInstancesAnnotation]
+	value, ok := getter.GetAnnotations()[MinHealthyPercentageAnnotation]
 	if !ok {
 		return DefaultMinHealthyPercentage, nil
 	}
@@ -89,4 +89,12 @@ func AWSAccountDetails(ctx context.Context, client client.Client, cluster *infra
 
 func Cluster(getter LabelsGetter) string {
 	return getter.GetLabels()[ClusterLabel]
+}
+
+func Controlplane(getter LabelsGetter) string {
+	return getter.GetLabels()[ControlPlaneLabel]
+}
+
+func MachineDeployment(getter LabelsGetter) string {
+	return getter.GetLabels()[MachineDeploymentLabel]
 }

@@ -58,7 +58,7 @@ type LegacyMachineDeploymentReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var err error
-	logger := r.Log.WithValues("namespace", req.Namespace, "cluster", req.Name)
+	logger := r.Log.WithValues("namespace", req.Namespace, "machinedeployment", req.Name)
 
 	md := &infrastructurev1alpha3.AWSMachineDeployment{}
 	if err := r.Get(ctx, req.NamespacedName, md); err != nil {
@@ -82,7 +82,7 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 
 	clusterKey := types.NamespacedName{Name: key.Cluster(md), Namespace: md.Namespace}
 	cluster := &infrastructurev1alpha3.AWSCluster{}
-	if err := r.Get(ctx, clusterKey, md); err != nil {
+	if err := r.Get(ctx, clusterKey, cluster); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
@@ -111,7 +111,12 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 	// Create InstanceRefresh service.
 	instanceRefreshService := refresh.New(clusterScope, r.Client)
 
-	err = instanceRefreshService.Reconcile(ctx, minHealthyPercentage)
+	// ASG filter MachineDeployment
+	filter := map[string]string{
+		key.MachineDeploymentLabel: key.MachineDeployment(md),
+	}
+
+	err = instanceRefreshService.Reconcile(ctx, minHealthyPercentage, filter)
 	if err != nil {
 		return ctrl.Result{}, microerror.Mask(err)
 	}

@@ -58,7 +58,7 @@ type LegacyControlplaneReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var err error
-	logger := r.Log.WithValues("namespace", req.Namespace, "cluster", req.Name)
+	logger := r.Log.WithValues("namespace", req.Namespace, "controlplane", req.Name)
 
 	cp := &infrastructurev1alpha3.AWSControlPlane{}
 	if err := r.Get(ctx, req.NamespacedName, cp); err != nil {
@@ -80,9 +80,9 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return defaultRequeue(), microerror.Mask(err)
 	}
 
-	clusterKey := types.NamespacedName{Name: key.Cluster(cp), Namespace: cp.Namespace}
+	clusterKey := types.NamespacedName{Name: key.Cluster(cp), Namespace: cp.GetNamespace()}
 	cluster := &infrastructurev1alpha3.AWSCluster{}
-	if err := r.Get(ctx, clusterKey, cp); err != nil {
+	if err := r.Get(ctx, clusterKey, cluster); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
@@ -111,7 +111,12 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 	// Create InstanceRefresh service.
 	instanceRefreshService := refresh.New(clusterScope, r.Client)
 
-	err = instanceRefreshService.Reconcile(ctx, minHealthyPercentage)
+	// ASG filter ControlPlane
+	filter := map[string]string{
+		key.ControlPlaneLabel: key.Controlplane(cp),
+	}
+
+	err = instanceRefreshService.Reconcile(ctx, minHealthyPercentage, filter)
 	if err != nil {
 		return ctrl.Result{}, microerror.Mask(err)
 	}

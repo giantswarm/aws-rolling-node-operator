@@ -80,11 +80,29 @@ func main() {
 
 	if err = (&controllers.LegacyClusterReconciler{
 		Client:       mgr.GetClient(),
-		Log:          ctrl.Log.WithName("legacy-controller"),
+		Log:          ctrl.Log.WithName("legacy-cluster-controller"),
 		Scheme:       mgr.GetScheme(),
 		Installation: installation,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Cluster")
+		os.Exit(1)
+	}
+	if err = (&controllers.LegacyMachineDeploymentReconciler{
+		Client:       mgr.GetClient(),
+		Log:          ctrl.Log.WithName("legacy-machinedeployment-controller"),
+		Scheme:       mgr.GetScheme(),
+		Installation: installation,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "MachineDeployment")
+		os.Exit(1)
+	}
+	if err = (&controllers.LegacyControlplaneReconciler{
+		Client:       mgr.GetClient(),
+		Log:          ctrl.Log.WithName("legacy-controlplane-controller"),
+		Scheme:       mgr.GetScheme(),
+		Installation: installation,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Controlplane")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

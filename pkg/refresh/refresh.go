@@ -32,14 +32,9 @@ func New(scope *scope.ClusterScope, client client.Client) *InstanceRefreshServic
 	}
 }
 
-func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercentage int64) error {
-	// no7t8-master0-launch-template
-	// no7t8-m4gb8-LaunchTemplate
-
-	// tags giantswarm.io/control-plane	x5o6r
-	// tags giantswarm.io/machine-deployment m4gb8
-
+func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercentage int64, asgFilter map[string]string) error {
 	asgInput := &autoscaling.DescribeAutoScalingGroupsInput{
+		// default filter for ASGs
 		Filters: []*autoscaling.Filter{
 			{
 				Name:   aws.String("tag-key"),
@@ -50,6 +45,21 @@ func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercen
 				Values: []*string{aws.String(s.Scope.ClusterName())},
 			},
 		},
+	}
+
+	// addtional filter for ASG, depending what ASG you wanna roll specifically (certain nodepools or controlplanes)
+	for k, v := range asgFilter {
+		filter := []*autoscaling.Filter{
+			{
+				Name:   aws.String("tag-key"),
+				Values: []*string{aws.String(k)},
+			},
+			{
+				Name:   aws.String("tag-value"),
+				Values: []*string{aws.String(v)},
+			},
+		}
+		asgInput.Filters = append(asgInput.Filters, filter...)
 	}
 
 	asgOutput, err := s.ASG.Client.DescribeAutoScalingGroups(asgInput)
@@ -68,12 +78,14 @@ func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercen
 			return err
 
 		}
-		if output.InstanceRefreshes[0].EndTime != nil {
-			if !output.InstanceRefreshes[0].EndTime.UTC().Before(time.Now().UTC().Add(-30 * time.Minute)) {
-				s.Scope.Logger.Info(
-					fmt.Sprintf("ASG %s already refreshed within the last 30 minutes, skipping...",
-						*asg.AutoScalingGroupName))
-				continue
+		if len(output.InstanceRefreshes) > 0 {
+			if output.InstanceRefreshes[0].EndTime != nil {
+				if !output.InstanceRefreshes[0].EndTime.UTC().Before(time.Now().UTC().Add(-30 * time.Minute)) {
+					s.Scope.Logger.Info(
+						fmt.Sprintf("ASG %s already refreshed within the last 30 minutes, skipping...",
+							*asg.AutoScalingGroupName))
+					continue
+				}
 			}
 		}
 
