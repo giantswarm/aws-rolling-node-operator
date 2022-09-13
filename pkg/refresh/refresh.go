@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+
 	"github.com/cenkalti/backoff/v4"
 	"github.com/giantswarm/aws-rolling-node-operator/pkg/aws/scope"
 	"github.com/giantswarm/aws-rolling-node-operator/pkg/aws/services/asg"
