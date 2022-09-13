@@ -116,9 +116,9 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 		key.MachineDeploymentLabel: key.MachineDeployment(md),
 	}
 
-	err = instanceRefreshService.Reconcile(ctx, minHealthyPercentage, filter)
+	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, filter)
 	if err != nil {
-		r.sendEvent(md, v1.EventTypeWarning, "FailedInstanceRefresh", err.Error())
+		r.sendEvent(md, v1.EventTypeWarning, "InstanceRefreshFailed", err.Error())
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
