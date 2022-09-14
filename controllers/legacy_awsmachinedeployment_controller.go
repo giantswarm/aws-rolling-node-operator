@@ -111,13 +111,21 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 
 	// Create InstanceRefresh service.
 	instanceRefreshService := refresh.New(clusterScope, r.Client)
+	startRefresh := make(chan bool)
 
 	// ASG filter MachineDeployment
 	filter := map[string]string{
 		key.MachineDeploymentLabel: key.MachineDeployment(md),
 	}
 
-	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, filter)
+	go func() {
+		startEvent := <-startRefresh
+		if startEvent {
+			r.sendEvent(md, v1.EventTypeNormal, "InstanceRefreshIsStarting", "Starting to replace all worker nodes.")
+		}
+	}()
+
+	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, filter, startRefresh)
 	if _, ok := err.(awserr.Error); ok {
 		return defaultRequeue(), microerror.Mask(err)
 	} else if err != nil {

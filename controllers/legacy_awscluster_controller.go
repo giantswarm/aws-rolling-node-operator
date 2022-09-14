@@ -102,8 +102,16 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	// Create InstanceRefresh service.
 	instanceRefreshService := refresh.New(clusterScope, r.Client)
+	startRefresh := make(chan bool)
 
-	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, nil)
+	go func() {
+		startEvent := <-startRefresh
+		if startEvent {
+			r.sendEvent(cluster, v1.EventTypeNormal, "InstanceRefreshIsStarting", "Starting to replace all master and worker nodes.")
+		}
+	}()
+
+	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, nil, startRefresh)
 	if _, ok := err.(awserr.Error); ok {
 		return defaultRequeue(), microerror.Mask(err)
 	} else if err != nil {

@@ -37,7 +37,7 @@ func New(scope *scope.ClusterScope, client client.Client) *InstanceRefreshServic
 	}
 }
 
-func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercentage int64, asgFilter map[string]string) error {
+func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercentage int64, asgFilter map[string]string, startRefresh chan bool) error {
 	asgInput := &autoscaling.DescribeAutoScalingGroupsInput{
 		// default filter for ASGs
 		Filters: []*autoscaling.Filter{
@@ -73,7 +73,7 @@ func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercenta
 		return err
 	}
 
-	for _, asg := range asgOutput.AutoScalingGroups {
+	for i, asg := range asgOutput.AutoScalingGroups {
 		refreshStatus := &autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: asg.AutoScalingGroupName,
 		}
@@ -122,6 +122,10 @@ func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercenta
 		} else if err != nil {
 			s.Scope.Logger.Error(err, "failed to start instance refresh")
 			return err
+		} else {
+			if i == 0 {
+				startRefresh <- true
+			}
 		}
 
 		b := backoff.NewConstantBackOff(30 * time.Second)

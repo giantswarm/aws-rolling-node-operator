@@ -111,13 +111,21 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	// Create InstanceRefresh service.
 	instanceRefreshService := refresh.New(clusterScope, r.Client)
+	startRefresh := make(chan bool)
 
 	// ASG filter ControlPlane
 	filter := map[string]string{
 		key.ControlPlaneLabel: key.Controlplane(cp),
 	}
 
-	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, filter)
+	go func() {
+		startEvent := <-startRefresh
+		if startEvent {
+			r.sendEvent(cp, v1.EventTypeNormal, "InstanceRefreshIsStarting", "Starting to replace all master nodes.")
+		}
+	}()
+
+	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, filter, startRefresh)
 	if _, ok := err.(awserr.Error); ok {
 		return defaultRequeue(), microerror.Mask(err)
 	} else if err != nil {
