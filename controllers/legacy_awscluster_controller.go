@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 	infrastructurev1alpha3 "github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 	"github.com/giantswarm/microerror"
@@ -101,11 +102,22 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	// Create InstanceRefresh service.
 	instanceRefreshService := refresh.New(clusterScope, r.Client)
+	startRefresh := make(chan bool)
 
-	err = instanceRefreshService.Reconcile(ctx, minHealthyPercentage, nil)
-	if err != nil {
-		r.sendEvent(cluster, v1.EventTypeWarning, "InstanceRefreshFailed", err.Error())
-		return ctrl.Result{}, microerror.Mask(err)
+	go func() {
+		startEvent := <-startRefresh
+		if startEvent {
+			r.sendEvent(cluster, v1.EventTypeNormal, "InstanceRefreshIsStarting", "Starting to replace all master and worker nodes.")
+		}
+	}()
+
+	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, nil, startRefresh)
+	if _, ok := err.(awserr.Error); ok {
+		return defaultRequeue(), microerror.Mask(err)
+	} else if err != nil {
+		r.sendEvent(cluster, v1.EventTypeWarning, "InstanceRefreshCancelled", err.Error())
+	} else {
+		r.sendEvent(cluster, v1.EventTypeNormal, "InstanceRefreshSuccessful", "Replaced all master and worker nodes.")
 	}
 
 	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
@@ -117,14 +129,12 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	err = r.Update(ctx, cluster)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSCluster CR, conflict trying to update object")
-		return ctrl.Result{}, nil
 	} else if err != nil {
 		logger.Error(err, "failed to remove annotation on AWSCluster CR")
 		return ctrl.Result{}, microerror.Mask(err)
 	}
-	r.sendEvent(cluster, v1.EventTypeNormal, "InstancesRefreshed", "Refreshed all master and worker instances.")
 
-	return defaultRequeue(), nil
+	return ctrl.Result{}, nil
 }
 
 func (r *LegacyClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {

@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 	infrastructurev1alpha3 "github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 	"github.com/giantswarm/microerror"
@@ -110,16 +111,27 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	// Create InstanceRefresh service.
 	instanceRefreshService := refresh.New(clusterScope, r.Client)
+	startRefresh := make(chan bool)
 
 	// ASG filter ControlPlane
 	filter := map[string]string{
 		key.ControlPlaneLabel: key.Controlplane(cp),
 	}
 
-	err = instanceRefreshService.Reconcile(ctx, minHealthyPercentage, filter)
-	if err != nil {
-		r.sendEvent(cp, v1.EventTypeWarning, "InstanceRefreshFailed", err.Error())
-		return ctrl.Result{}, microerror.Mask(err)
+	go func() {
+		startEvent := <-startRefresh
+		if startEvent {
+			r.sendEvent(cp, v1.EventTypeNormal, "InstanceRefreshIsStarting", "Starting to replace all master nodes.")
+		}
+	}()
+
+	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, filter, startRefresh)
+	if _, ok := err.(awserr.Error); ok {
+		return defaultRequeue(), microerror.Mask(err)
+	} else if err != nil {
+		r.sendEvent(cp, v1.EventTypeWarning, "InstanceRefreshCancelled", err.Error())
+	} else {
+		r.sendEvent(cp, v1.EventTypeNormal, "InstanceRefreshSuccessful", "Replaced all master nodes.")
 	}
 
 	if err := r.Get(ctx, req.NamespacedName, cp); err != nil {
@@ -131,14 +143,12 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 	err = r.Update(ctx, cp)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSControlPlane CR, conflict trying to update object")
-		return ctrl.Result{}, nil
 	} else if err != nil {
 		logger.Error(err, "failed to remove annotation on AWSControlPlane CR")
 		return ctrl.Result{}, microerror.Mask(err)
 	}
-	r.sendEvent(cp, v1.EventTypeNormal, "InstancesRefreshed", "Refreshed all master instances.")
 
-	return defaultRequeue(), nil
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

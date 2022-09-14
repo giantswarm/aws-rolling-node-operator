@@ -5,15 +5,20 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	infrastructurev1alpha3 "github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 
 	"github.com/cenkalti/backoff/v4"
+
 	"github.com/giantswarm/aws-rolling-node-operator/pkg/aws/scope"
 	"github.com/giantswarm/aws-rolling-node-operator/pkg/aws/services/asg"
+	"github.com/giantswarm/aws-rolling-node-operator/pkg/key"
 )
 
 type InstanceRefreshService struct {
@@ -32,7 +37,7 @@ func New(scope *scope.ClusterScope, client client.Client) *InstanceRefreshServic
 	}
 }
 
-func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercentage int64, asgFilter map[string]string) error {
+func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercentage int64, asgFilter map[string]string, startRefresh chan bool) error {
 	asgInput := &autoscaling.DescribeAutoScalingGroupsInput{
 		// default filter for ASGs
 		Filters: []*autoscaling.Filter{
@@ -64,10 +69,11 @@ func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercen
 
 	asgOutput, err := s.ASG.Client.DescribeAutoScalingGroups(asgInput)
 	if err != nil {
+		s.Scope.Logger.Error(err, "failed to describe autoscaling group")
 		return err
 	}
 
-	for _, asg := range asgOutput.AutoScalingGroups {
+	for i, asg := range asgOutput.AutoScalingGroups {
 		refreshStatus := &autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: asg.AutoScalingGroupName,
 		}
@@ -115,39 +121,57 @@ func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercen
 			}
 		} else if err != nil {
 			s.Scope.Logger.Error(err, "failed to start instance refresh")
+			return err
+		} else {
+			if i == 0 {
+				startRefresh <- true
+			}
 		}
 
-		b := backoff.NewConstantBackOff(60 * time.Second)
+		b := backoff.NewConstantBackOff(30 * time.Second)
 
 		waitonRefresh := func() error {
+
+			if s.shouldCancel(ctx, asgFilter) {
+				cancelInput := &autoscaling.CancelInstanceRefreshInput{
+					AutoScalingGroupName: aws.String(*asg.AutoScalingGroupName),
+				}
+				_, err := s.ASG.Client.CancelInstanceRefresh(cancelInput)
+				if err != nil {
+					s.Scope.Logger.Error(err, "failed to cancel instance refresh")
+					return err
+				}
+				return backoff.Permanent(fmt.Errorf("Cancelled instance refresh for ASG %s", *asg.AutoScalingGroupName))
+			}
+
 			output, err := s.ASG.Client.DescribeInstanceRefreshes(refreshStatus)
 			if err != nil {
 				s.Scope.Logger.Error(err, "failed to describe instance refreshes")
-				return backoff.Permanent(err)
+				return err
 			}
 			if *output.InstanceRefreshes[0].Status == autoscaling.InstanceRefreshStatusSuccessful {
 				s.Scope.Logger.Info(fmt.Sprintf("Successfully refreshed all instances in ASG %s",
-					*output.InstanceRefreshes[0].AutoScalingGroupName))
+					*asg.AutoScalingGroupName))
 				return nil
 			}
 
 			if *output.InstanceRefreshes[0].Status == autoscaling.InstanceRefreshStatusCancelling {
 				s.Scope.Logger.Info(fmt.Sprintf("Cancelling refreshing instances in ASG %s",
-					*output.InstanceRefreshes[0].AutoScalingGroupName))
+					*asg.AutoScalingGroupName))
 				return nil
 			}
 
 			if *output.InstanceRefreshes[0].Status == autoscaling.InstanceRefreshStatusCancelled {
 				s.Scope.Logger.Info(fmt.Sprintf("Cancelled refreshing instances in ASG %s",
-					*output.InstanceRefreshes[0].AutoScalingGroupName))
+					*asg.AutoScalingGroupName))
 				return nil
 			}
 
 			s.Scope.Logger.Info(fmt.Sprintf("Refreshing instances in ASG %s, Status: %s",
-				*output.InstanceRefreshes[0].AutoScalingGroupName,
+				*asg.AutoScalingGroupName,
 				*output.InstanceRefreshes[0].Status))
 
-			return fmt.Errorf("ASG %s is not ready yet", *output.InstanceRefreshes[0].AutoScalingGroupName)
+			return fmt.Errorf("ASG %s is not ready yet", *asg.AutoScalingGroupName)
 		}
 		err = backoff.Retry(waitonRefresh, b)
 		if err != nil {
@@ -156,4 +180,36 @@ func (s *InstanceRefreshService) Reconcile(ctx context.Context, minHealhtyPercen
 		}
 	}
 	return nil
+}
+
+func (s *InstanceRefreshService) shouldCancel(ctx context.Context, asgFilter map[string]string) bool {
+	if asgFilter != nil {
+		if v, ok := asgFilter[key.ControlPlaneLabel]; ok {
+			cp := &infrastructurev1alpha3.AWSControlPlane{}
+			err := s.Client.Get(ctx, types.NamespacedName{Name: v, Namespace: s.Scope.ClusterNamespace()}, cp)
+			if err != nil {
+				s.Scope.Logger.Error(err, "failed to get AWSControlplane")
+				return false
+			}
+			return key.CancelRefreshInstances(cp)
+		}
+		if v, ok := asgFilter[key.MachineDeploymentLabel]; ok {
+			md := &infrastructurev1alpha3.AWSMachineDeployment{}
+			err := s.Client.Get(ctx, types.NamespacedName{Name: v, Namespace: s.Scope.ClusterNamespace()}, md)
+			if err != nil {
+				s.Scope.Logger.Error(err, "failed to get AWSMachineDeployment")
+				return false
+			}
+			return key.CancelRefreshInstances(md)
+		}
+	} else {
+		cluster := &infrastructurev1alpha3.AWSCluster{}
+		err := s.Client.Get(ctx, types.NamespacedName{Name: s.Scope.ClusterName(), Namespace: s.Scope.ClusterNamespace()}, cluster)
+		if err != nil {
+			s.Scope.Logger.Error(err, "failed to get AWSCluster")
+			return false
+		}
+		return key.CancelRefreshInstances(cluster)
+	}
+	return false
 }
