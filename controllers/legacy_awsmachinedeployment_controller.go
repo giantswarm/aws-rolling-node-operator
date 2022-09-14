@@ -123,7 +123,7 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 	} else if err != nil {
 		r.sendEvent(md, v1.EventTypeWarning, "InstanceRefreshCancelled", err.Error())
 	} else {
-		r.sendEvent(md, v1.EventTypeNormal, "InstancesRefreshSuccessful", "Replaced all worker nodes.")
+		r.sendEvent(md, v1.EventTypeNormal, "InstanceRefreshSuccessful", "Replaced all worker nodes.")
 	}
 
 	if err := r.Get(ctx, req.NamespacedName, md); err != nil {
