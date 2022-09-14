@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 	infrastructurev1alpha3 "github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 	"github.com/giantswarm/microerror"
@@ -117,9 +118,12 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 	}
 
 	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, filter)
-	if err != nil {
-		r.sendEvent(md, v1.EventTypeWarning, "InstanceRefreshFailed", err.Error())
-		return ctrl.Result{}, microerror.Mask(err)
+	if _, ok := err.(awserr.Error); ok {
+		return defaultRequeue(), microerror.Mask(err)
+	} else if err != nil {
+		r.sendEvent(md, v1.EventTypeWarning, "InstanceRefreshCancelled", err.Error())
+	} else {
+		r.sendEvent(md, v1.EventTypeNormal, "InstancesRefreshSuccessful", "Replaced all worker nodes.")
 	}
 
 	if err := r.Get(ctx, req.NamespacedName, md); err != nil {
@@ -131,14 +135,12 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 	err = r.Update(ctx, md)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSMachineDeployment CR, conflict trying to update object")
-		return ctrl.Result{}, nil
 	} else if err != nil {
 		logger.Error(err, "failed to remove annotation on AWSMachineDeployment CR")
 		return ctrl.Result{}, microerror.Mask(err)
 	}
-	r.sendEvent(md, v1.EventTypeNormal, "InstancesRefreshed", "Refreshed all worker instances.")
 
-	return defaultRequeue(), nil
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

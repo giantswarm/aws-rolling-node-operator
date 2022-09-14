@@ -69,6 +69,7 @@ func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercenta
 
 	asgOutput, err := s.ASG.Client.DescribeAutoScalingGroups(asgInput)
 	if err != nil {
+		s.Scope.Logger.Error(err, "failed to describe autoscaling group")
 		return err
 	}
 
@@ -120,15 +121,29 @@ func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercenta
 			}
 		} else if err != nil {
 			s.Scope.Logger.Error(err, "failed to start instance refresh")
+			return err
 		}
 
-		b := backoff.NewConstantBackOff(60 * time.Second)
+		b := backoff.NewConstantBackOff(30 * time.Second)
 
 		waitonRefresh := func() error {
+
+			if s.shouldCancel(ctx, asgFilter) {
+				cancelInput := &autoscaling.CancelInstanceRefreshInput{
+					AutoScalingGroupName: aws.String(*asg.AutoScalingGroupName),
+				}
+				_, err := s.ASG.Client.CancelInstanceRefresh(cancelInput)
+				if err != nil {
+					s.Scope.Logger.Error(err, "failed to cancel instance refresh")
+					return err
+				}
+				return backoff.Permanent(fmt.Errorf("Cancelled instance refresh for ASG %s", *asg.AutoScalingGroupName))
+			}
+
 			output, err := s.ASG.Client.DescribeInstanceRefreshes(refreshStatus)
 			if err != nil {
 				s.Scope.Logger.Error(err, "failed to describe instance refreshes")
-				return backoff.Permanent(err)
+				return err
 			}
 			if *output.InstanceRefreshes[0].Status == autoscaling.InstanceRefreshStatusSuccessful {
 				s.Scope.Logger.Info(fmt.Sprintf("Successfully refreshed all instances in ASG %s",
@@ -151,18 +166,6 @@ func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercenta
 			s.Scope.Logger.Info(fmt.Sprintf("Refreshing instances in ASG %s, Status: %s",
 				*asg.AutoScalingGroupName,
 				*output.InstanceRefreshes[0].Status))
-
-			if s.shouldCancel(ctx, asgFilter) {
-				cancelInput := &autoscaling.CancelInstanceRefreshInput{
-					AutoScalingGroupName: aws.String(*asg.AutoScalingGroupName),
-				}
-				_, err := s.ASG.Client.CancelInstanceRefresh(cancelInput)
-				if err != nil {
-					s.Scope.Logger.Error(err, "failed to cancel instance refresh")
-					return nil
-				}
-				return backoff.Permanent(fmt.Errorf("cancelled instance refresh for ASG %s", *asg.AutoScalingGroupName))
-			}
 
 			return fmt.Errorf("ASG %s is not ready yet", *asg.AutoScalingGroupName)
 		}
