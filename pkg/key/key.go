@@ -18,24 +18,24 @@ const (
 	ControlPlaneLabel      = "giantswarm.io/control-plane"
 	MachineDeploymentLabel = "giantswarm.io/machine-deployment"
 
-	RefreshInstancesAnnotation       = "alpha.giantswarm.io/refresh-instances"
-	CancelRefreshInstancesAnnotation = "alpha.giantswarm.io/cancel-refresh-instances"
-	MinHealthyPercentageAnnotation   = "alpha.giantswarm.io/refresh-instances-min-healhty-percentage"
+	InstanceRefreshAnnotation       = "alpha.giantswarm.io/instance-refresh"
+	CancelInstanceRefreshAnnotation = "alpha.giantswarm.io/cancel-instance-refresh"
+	MinHealthyPercentageAnnotation  = "alpha.giantswarm.io/instance-refresh-min-healhty-percentage"
 )
 
 var (
 	DefaultMinHealthyPercentage int64 = 90
 )
 
-func RefreshInstances(getter AnnotationsGetter) bool {
-	if _, ok := getter.GetAnnotations()[RefreshInstancesAnnotation]; !ok {
+func InstanceRefresh(getter AnnotationsGetter) bool {
+	if _, ok := getter.GetAnnotations()[InstanceRefreshAnnotation]; !ok {
 		return false
 	}
 	return true
 }
 
-func CancelRefreshInstances(getter AnnotationsGetter) bool {
-	if _, ok := getter.GetAnnotations()[CancelRefreshInstancesAnnotation]; !ok {
+func CancelInstanceRefresh(getter AnnotationsGetter) bool {
+	if _, ok := getter.GetAnnotations()[CancelInstanceRefreshAnnotation]; !ok {
 		return false
 	}
 	return true

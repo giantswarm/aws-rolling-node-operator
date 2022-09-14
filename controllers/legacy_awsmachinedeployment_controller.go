@@ -69,10 +69,10 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
-	if !key.RefreshInstances(md) {
+	if !key.InstanceRefresh(md) {
 		logger.Info(
 			fmt.Sprintf("AWSMachineDeployment CR do not have required annotation '%s', ignoring CR",
-				key.RefreshInstancesAnnotation))
+				key.InstanceRefreshAnnotation))
 		return defaultRequeue(), nil
 	}
 
@@ -139,7 +139,8 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
-	delete(md.Annotations, key.RefreshInstancesAnnotation)
+	delete(md.Annotations, key.InstanceRefreshAnnotation)
+	delete(md.Annotations, key.CancelInstanceRefreshAnnotation)
 	err = r.Update(ctx, md)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSMachineDeployment CR, conflict trying to update object")

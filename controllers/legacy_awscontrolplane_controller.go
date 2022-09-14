@@ -69,10 +69,10 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
-	if !key.RefreshInstances(cp) {
+	if !key.InstanceRefresh(cp) {
 		logger.Info(
 			fmt.Sprintf("AWSControlPlane CR do not have required annotation '%s', ignoring CR",
-				key.RefreshInstancesAnnotation))
+				key.InstanceRefreshAnnotation))
 		return defaultRequeue(), nil
 	}
 
@@ -139,7 +139,8 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
-	delete(cp.Annotations, key.RefreshInstancesAnnotation)
+	delete(cp.Annotations, key.InstanceRefreshAnnotation)
+	delete(cp.Annotations, key.CancelInstanceRefreshAnnotation)
 	err = r.Update(ctx, cp)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSControlPlane CR, conflict trying to update object")

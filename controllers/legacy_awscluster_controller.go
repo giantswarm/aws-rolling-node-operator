@@ -69,10 +69,10 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
-	if !key.RefreshInstances(cluster) {
+	if !key.InstanceRefresh(cluster) {
 		logger.Info(
 			fmt.Sprintf("AWSCluster CR do not have required annotation '%s', ignoring CR",
-				key.RefreshInstancesAnnotation))
+				key.InstanceRefreshAnnotation))
 		return defaultRequeue(), nil
 	}
 
@@ -125,7 +125,8 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
-	delete(cluster.Annotations, key.RefreshInstancesAnnotation)
+	delete(cluster.Annotations, key.InstanceRefreshAnnotation)
+	delete(cluster.Annotations, key.CancelInstanceRefreshAnnotation)
 	err = r.Update(ctx, cluster)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSCluster CR, conflict trying to update object")

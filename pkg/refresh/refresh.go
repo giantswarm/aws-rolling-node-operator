@@ -191,7 +191,7 @@ func (s *InstanceRefreshService) shouldCancel(ctx context.Context, asgFilter map
 				s.Scope.Logger.Error(err, "failed to get AWSControlplane")
 				return false
 			}
-			return key.CancelRefreshInstances(cp)
+			return key.CancelInstanceRefresh(cp)
 		}
 		if v, ok := asgFilter[key.MachineDeploymentLabel]; ok {
 			md := &infrastructurev1alpha3.AWSMachineDeployment{}
@@ -200,7 +200,7 @@ func (s *InstanceRefreshService) shouldCancel(ctx context.Context, asgFilter map
 				s.Scope.Logger.Error(err, "failed to get AWSMachineDeployment")
 				return false
 			}
-			return key.CancelRefreshInstances(md)
+			return key.CancelInstanceRefresh(md)
 		}
 	} else {
 		cluster := &infrastructurev1alpha3.AWSCluster{}
@@ -209,7 +209,7 @@ func (s *InstanceRefreshService) shouldCancel(ctx context.Context, asgFilter map
 			s.Scope.Logger.Error(err, "failed to get AWSCluster")
 			return false
 		}
-		return key.CancelRefreshInstances(cluster)
+		return key.CancelInstanceRefresh(cluster)
 	}
 	return false
 }
