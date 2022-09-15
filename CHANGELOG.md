@@ -14,4 +14,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Init
 - Docs
 
-[Unreleased]: https://github.com/giantswarm/aws-rolling-node-operator/compare/HEAD
+[Unreleased]: https://github.com/giantswarm/aws-rolling-node-operator/tree/main
+
