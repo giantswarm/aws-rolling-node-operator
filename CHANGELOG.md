@@ -9,10 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2022-09-15
+
 ### Added
 
 - Init
 - Docs
 
-[Unreleased]: https://github.com/giantswarm/aws-rolling-node-operator/tree/main
-
+[Unreleased]: https://github.com/giantswarm/aws-rolling-node-operator/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/giantswarm/aws-rolling-node-operator/releases/tag/v0.1.0
