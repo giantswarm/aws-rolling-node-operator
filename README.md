@@ -2,7 +2,7 @@
 
 # Operator for rolling nodes
 
-The `aws-rolling-node-operator` reconciles on `AWSCluster`, `AWSControlplane` and `AWSMachineDeployment` Custom Resources to trigger an EC2 instance refresh on the given Auto Scaling groups. After a Auto scaling group got refreshed the operator won't allow allow to refresh instances again within `30` minutes.
+The `aws-rolling-node-operator` reconciles on `AWSCluster`, `AWSControlplane` and `AWSMachineDeployment` Custom Resources to trigger an EC2 instance refresh on the given Auto Scaling groups. After a Auto scaling group got refreshed the operator won't allow to refresh instances again within `30` minutes.
 
 Setting the annotation `alpha.giantswarm.io/instance-refresh: true` will refresh (terminate and start new EC2 instances) EC2 instances based on the Custom Reource:
 
