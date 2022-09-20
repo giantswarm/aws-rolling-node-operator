@@ -21,6 +21,6 @@ Events:
 
 Additionally annotations which can be set:
 
-`alpha.giantswarm.io/instance-refresh-min-healhty-percentage` - Sets the amount of capacity which must remain healthy inside the Auto Scaling group. The value is expressed as a percentage of the desired capacity of the Auto Scaling group (rounded up to the nearest integer). The default is 90. Setting the minimum healthy percentage to 100 percent limits the rate of replacement to one instance at a time. In contrast, setting it to 0 percent has the effect of replacing all instances at the same time.
+`alpha.giantswarm.io/instance-refresh-min-healthy-percentage` - Sets the amount of capacity which must remain healthy inside the Auto Scaling group. The value is expressed as a percentage of the desired capacity of the Auto Scaling group (rounded up to the nearest integer). The default is 90. Setting the minimum healthy percentage to 100 percent limits the rate of replacement to one instance at a time. In contrast, setting it to 0 percent has the effect of replacing all instances at the same time.
 
 `alpha.giantswarm.io/cancel-instance-refresh` - This will immediately cancel the current instance refresh. It stops replacing nodes which haven’t been rolled so far.
