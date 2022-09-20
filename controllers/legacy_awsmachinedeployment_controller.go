@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 	infrastructurev1alpha3 "github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
+	"github.com/giantswarm/k8smetadata/pkg/annotation"
 	"github.com/giantswarm/microerror"
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
@@ -72,7 +73,7 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 	if !key.InstanceRefresh(md) {
 		logger.Info(
 			fmt.Sprintf("AWSMachineDeployment CR do not have required annotation '%s', ignoring CR",
-				key.InstanceRefreshAnnotation))
+				annotation.AWSInstanceRefresh))
 		return defaultRequeue(), nil
 	}
 
@@ -139,8 +140,8 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
-	delete(md.Annotations, key.InstanceRefreshAnnotation)
-	delete(md.Annotations, key.CancelInstanceRefreshAnnotation)
+	delete(md.Annotations, annotation.AWSInstanceRefresh)
+	delete(md.Annotations, annotation.AWSCancelInstanceRefresh)
 	err = r.Update(ctx, md)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSMachineDeployment CR, conflict trying to update object")

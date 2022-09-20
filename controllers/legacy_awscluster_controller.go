@@ -24,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 	infrastructurev1alpha3 "github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
+	"github.com/giantswarm/k8smetadata/pkg/annotation"
 	"github.com/giantswarm/microerror"
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
@@ -72,7 +73,7 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if !key.InstanceRefresh(cluster) {
 		logger.Info(
 			fmt.Sprintf("AWSCluster CR do not have required annotation '%s', ignoring CR",
-				key.InstanceRefreshAnnotation))
+				annotation.AWSInstanceRefresh))
 		return defaultRequeue(), nil
 	}
 
@@ -125,8 +126,8 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
-	delete(cluster.Annotations, key.InstanceRefreshAnnotation)
-	delete(cluster.Annotations, key.CancelInstanceRefreshAnnotation)
+	delete(cluster.Annotations, annotation.AWSInstanceRefresh)
+	delete(cluster.Annotations, annotation.AWSCancelInstanceRefresh)
 	err = r.Update(ctx, cluster)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSCluster CR, conflict trying to update object")
