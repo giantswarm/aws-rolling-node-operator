@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	infrastructurev1alpha3 "github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
+	"github.com/giantswarm/k8smetadata/pkg/annotation"
 	"github.com/giantswarm/microerror"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -17,10 +18,6 @@ const (
 	ClusterLabel           = "giantswarm.io/cluster"
 	ControlPlaneLabel      = "giantswarm.io/control-plane"
 	MachineDeploymentLabel = "giantswarm.io/machine-deployment"
-
-	InstanceRefreshAnnotation       = "alpha.giantswarm.io/instance-refresh"
-	CancelInstanceRefreshAnnotation = "alpha.giantswarm.io/cancel-instance-refresh"
-	MinHealthyPercentageAnnotation  = "alpha.giantswarm.io/instance-refresh-min-healthy-percentage"
 )
 
 var (
@@ -28,21 +25,21 @@ var (
 )
 
 func InstanceRefresh(getter AnnotationsGetter) bool {
-	if _, ok := getter.GetAnnotations()[InstanceRefreshAnnotation]; !ok {
+	if _, ok := getter.GetAnnotations()[annotation.AWSInstanceRefresh]; !ok {
 		return false
 	}
 	return true
 }
 
 func CancelInstanceRefresh(getter AnnotationsGetter) bool {
-	if _, ok := getter.GetAnnotations()[CancelInstanceRefreshAnnotation]; !ok {
+	if _, ok := getter.GetAnnotations()[annotation.AWSCancelInstanceRefresh]; !ok {
 		return false
 	}
 	return true
 }
 
 func MinHealthyPercentage(getter AnnotationsGetter) (int64, error) {
-	value, ok := getter.GetAnnotations()[MinHealthyPercentageAnnotation]
+	value, ok := getter.GetAnnotations()[annotation.AWSInstanceRefreshMinHealthyPercentage]
 	if !ok {
 		return DefaultMinHealthyPercentage, nil
 	}

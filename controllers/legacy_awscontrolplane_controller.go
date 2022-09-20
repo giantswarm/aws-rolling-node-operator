@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
 	infrastructurev1alpha3 "github.com/giantswarm/apiextensions/v6/pkg/apis/infrastructure/v1alpha3"
+	"github.com/giantswarm/k8smetadata/pkg/annotation"
 	"github.com/giantswarm/microerror"
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
@@ -72,7 +73,7 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 	if !key.InstanceRefresh(cp) {
 		logger.Info(
 			fmt.Sprintf("AWSControlPlane CR do not have required annotation '%s', ignoring CR",
-				key.InstanceRefreshAnnotation))
+				annotation.AWSInstanceRefresh))
 		return defaultRequeue(), nil
 	}
 
@@ -139,8 +140,8 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return ctrl.Result{}, microerror.Mask(err)
 	}
 
-	delete(cp.Annotations, key.InstanceRefreshAnnotation)
-	delete(cp.Annotations, key.CancelInstanceRefreshAnnotation)
+	delete(cp.Annotations, annotation.AWSInstanceRefresh)
+	delete(cp.Annotations, annotation.AWSCancelInstanceRefresh)
 	err = r.Update(ctx, cp)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSControlPlane CR, conflict trying to update object")
