@@ -20,7 +20,7 @@ const (
 
 	InstanceRefreshAnnotation       = "alpha.giantswarm.io/instance-refresh"
 	CancelInstanceRefreshAnnotation = "alpha.giantswarm.io/cancel-instance-refresh"
-	MinHealthyPercentageAnnotation  = "alpha.giantswarm.io/instance-refresh-min-healhty-percentage"
+	MinHealthyPercentageAnnotation  = "alpha.giantswarm.io/instance-refresh-min-healthy-percentage"
 )
 
 var (
