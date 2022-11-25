@@ -37,7 +37,7 @@ func New(scope *scope.ClusterScope, client client.Client) *InstanceRefreshServic
 	}
 }
 
-func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercentage int64, asgFilter map[string]string, startRefresh chan bool) error {
+func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealthyPercentage, instanceWarmupSeconds int64, asgFilter map[string]string, startRefresh chan bool) error {
 	asgInput := &autoscaling.DescribeAutoScalingGroupsInput{
 		// default filter for ASGs
 		Filters: []*autoscaling.Filter{
@@ -106,8 +106,8 @@ func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealhtyPercenta
 			Preferences: &autoscaling.RefreshPreferences{
 				CheckpointDelay:       nil,
 				CheckpointPercentages: []*int64{},
-				InstanceWarmup:        nil,
-				MinHealthyPercentage:  aws.Int64(minHealhtyPercentage),
+				InstanceWarmup:        aws.Int64(instanceWarmupSeconds),
+				MinHealthyPercentage:  aws.Int64(minHealthyPercentage),
 				SkipMatching:          nil,
 			},
 			Strategy: aws.String("Rolling"),

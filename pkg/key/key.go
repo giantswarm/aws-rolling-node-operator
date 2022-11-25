@@ -21,7 +21,8 @@ const (
 )
 
 var (
-	DefaultMinHealthyPercentage int64 = 90
+	DefaultMinHealthyPercentage  int64 = 90
+	DefaultInstanceWarmupSeconds int64 = 0
 )
 
 func InstanceRefresh(getter AnnotationsGetter) bool {
@@ -50,6 +51,24 @@ func MinHealthyPercentage(getter AnnotationsGetter) (int64, error) {
 	if v > 100 || v < 0 {
 		return DefaultMinHealthyPercentage,
 			fmt.Errorf("Minimum healthy percentage for refreshing instances must be between 0 and 100, got %v. Ignoring CR",
+				v)
+	}
+	return int64(v), nil
+
+}
+
+func InstanceWarmupSeconds(getter AnnotationsGetter) (int64, error) {
+	value, ok := getter.GetAnnotations()[annotation.AWSInstanceWarmupSeconds]
+	if !ok {
+		return DefaultInstanceWarmupSeconds, nil
+	}
+	v, err := strconv.Atoi(value)
+	if err != nil {
+		return DefaultInstanceWarmupSeconds, err
+	}
+	if v < 0 {
+		return DefaultInstanceWarmupSeconds,
+			fmt.Errorf("Instance Warmup Seconds must be 0 or higher, got %v. Ignoring CR",
 				v)
 	}
 	return int64(v), nil

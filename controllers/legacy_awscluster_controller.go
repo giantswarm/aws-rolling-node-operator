@@ -82,6 +82,11 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return defaultRequeue(), microerror.Mask(err)
 	}
 
+	instanceWarmupSeconds, err := key.InstanceWarmupSeconds(cluster)
+	if err != nil {
+		return defaultRequeue(), microerror.Mask(err)
+	}
+
 	accountID, arn, err := key.AWSAccountDetails(ctx, r.Client, cluster)
 	if err != nil {
 		return defaultRequeue(), microerror.Mask(err)
@@ -112,7 +117,7 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}()
 
-	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, nil, startRefresh)
+	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, instanceWarmupSeconds, nil, startRefresh)
 	if _, ok := err.(awserr.Error); ok {
 		return defaultRequeue(), microerror.Mask(err)
 	} else if err != nil {
