@@ -23,4 +23,6 @@ Additionally annotations which can be set:
 
 `alpha.giantswarm.io/instance-refresh-min-healthy-percentage` - Sets the amount of capacity which must remain healthy inside the Auto Scaling group. The value is expressed as a percentage of the desired capacity of the Auto Scaling group (rounded up to the nearest integer). The default is 90. Setting the minimum healthy percentage to 100 percent limits the rate of replacement to one instance at a time. In contrast, setting it to 0 percent has the effect of replacing all instances at the same time.
 
+`alpha.giantswarm.io/instance-warmup-seconds` - The instance warmup is the time period from when a new instance's state changes to InService to when it can receive traffic. During an instance refresh, Amazon EC2 Auto Scaling does not immediately move on to the next replacement after determining that a newly launched instance is healthy. It waits for the warm-up period that you specified before it moves on to replacing other instances. This can be helpful when your application takes time to initialize itself before it starts to serve traffic. The default is 0.
+
 `alpha.giantswarm.io/cancel-instance-refresh` - This will immediately cancel the current instance refresh. It stops replacing nodes which haven’t been rolled so far.

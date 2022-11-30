@@ -82,6 +82,11 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return defaultRequeue(), microerror.Mask(err)
 	}
 
+	instanceWarmupSeconds, err := key.InstanceWarmupSeconds(cp)
+	if err != nil {
+		return defaultRequeue(), microerror.Mask(err)
+	}
+
 	clusterKey := types.NamespacedName{Name: key.Cluster(cp), Namespace: cp.GetNamespace()}
 	cluster := &infrastructurev1alpha3.AWSCluster{}
 	if err := r.Get(ctx, clusterKey, cluster); err != nil {
@@ -126,7 +131,7 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 		}
 	}()
 
-	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, filter, startRefresh)
+	err = instanceRefreshService.Refresh(ctx, minHealthyPercentage, instanceWarmupSeconds, filter, startRefresh)
 	if _, ok := err.(awserr.Error); ok {
 		return defaultRequeue(), microerror.Mask(err)
 	} else if err != nil {
