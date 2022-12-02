@@ -147,6 +147,8 @@ func (r *LegacyMachineDeploymentReconciler) Reconcile(ctx context.Context, req c
 
 	delete(md.Annotations, annotation.AWSInstanceRefresh)
 	delete(md.Annotations, annotation.AWSCancelInstanceRefresh)
+	delete(md.Annotations, annotation.AWSInstanceRefreshMinHealthyPercentage)
+	delete(md.Annotations, annotation.AWSInstanceWarmupSeconds)
 	err = r.Update(ctx, md)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSMachineDeployment CR, conflict trying to update object")

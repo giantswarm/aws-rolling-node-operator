@@ -133,6 +133,8 @@ func (r *LegacyClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	delete(cluster.Annotations, annotation.AWSInstanceRefresh)
 	delete(cluster.Annotations, annotation.AWSCancelInstanceRefresh)
+	delete(cluster.Annotations, annotation.AWSInstanceRefreshMinHealthyPercentage)
+	delete(cluster.Annotations, annotation.AWSInstanceWarmupSeconds)
 	err = r.Update(ctx, cluster)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSCluster CR, conflict trying to update object")

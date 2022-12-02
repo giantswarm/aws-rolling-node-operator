@@ -147,6 +147,8 @@ func (r *LegacyControlplaneReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	delete(cp.Annotations, annotation.AWSInstanceRefresh)
 	delete(cp.Annotations, annotation.AWSCancelInstanceRefresh)
+	delete(cp.Annotations, annotation.AWSInstanceRefreshMinHealthyPercentage)
+	delete(cp.Annotations, annotation.AWSInstanceWarmupSeconds)
 	err = r.Update(ctx, cp)
 	if errors.IsConflict(err) {
 		logger.Info("Failed to remove annotation on AWSControlPlane CR, conflict trying to update object")
