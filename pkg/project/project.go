@@ -5,7 +5,7 @@ var (
 	gitSHA      = "n/a"
 	name        = "aws-rolling-node-operator"
 	source      = "https://github.com/giantswarm/aws-rolling-node-operator"
-	version     = "0.3.0"
+	version     = "0.3.1"
 )
 
 func Description() string {
