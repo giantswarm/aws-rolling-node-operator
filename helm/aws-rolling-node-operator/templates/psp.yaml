@@ -22,6 +22,8 @@ spec:
     rule: RunAsAny
   supplementalGroups:
     rule: RunAsAny
+  volumes:
+  - secret
   allowPrivilegeEscalation: false
   hostNetwork: false
   hostIPC: false
