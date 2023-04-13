@@ -9,7 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
 - add the use of runtime/default secccomp profile.
+- Remove CAPI dependencies.
 
 ## [0.3.2] - 2022-12-02
 
