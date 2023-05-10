@@ -97,7 +97,7 @@ func (s *InstanceRefreshService) Refresh(ctx context.Context, minHealthyPercenta
 
 		if len(asg.Instances) == 0 {
 			s.Scope.Info(fmt.Sprintf("ASG %s has no instances, skipping...", *asg.AutoScalingGroupName))
-			return nil
+			continue
 		}
 
 		refreshInput := &autoscaling.StartInstanceRefreshInput{
