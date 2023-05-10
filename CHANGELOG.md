@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Skip ASG in case no instance is present.
+
 ### Changed
 
 - add the use of runtime/default secccomp profile.
