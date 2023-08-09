@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/giantswarm/aws-rolling-node-operator.svg?style=shield)](https://circleci.com/gh/giantswarm/aws-rolling-node-operator)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/aws-rolling-node-operator/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/aws-rolling-node-operator/tree/main)
 
 # Operator for rolling nodes
 
