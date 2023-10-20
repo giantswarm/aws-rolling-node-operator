@@ -80,7 +80,7 @@ require (
 replace (
 	github.com/coreos/etcd => github.com/coreos/etcd v3.3.25+incompatible
 	github.com/dgrijalva/jwt-go => github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
-	github.com/go-logr/logr => github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr => github.com/go-logr/logr v1.2.4
 	github.com/gogo/protobuf v1.3.1 => github.com/gogo/protobuf v1.3.2
 	github.com/gorilla/websocket v1.4.0 => github.com/gorilla/websocket v1.4.2
 	k8s.io/klog/v2 => k8s.io/klog/v2 v2.10.0
