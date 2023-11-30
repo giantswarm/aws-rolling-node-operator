@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `global.podSecurityStandards.enforced` value for PSS migration.
 
+### Changed
+
+- Upgraded `github.com/prometheus/client_golang` to `v1.11.1`.
+- Upgraded `golang.org/x/text` to `v0.3.8`.
+
 ## [0.5.0] - 2023-07-13
 
 ### Fixed
