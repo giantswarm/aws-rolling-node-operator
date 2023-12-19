@@ -13,7 +13,7 @@ image:
   name: "giantswarm/aws-rolling-node-operator"
   tag: "[[ .Version ]]"
 registry:
-  domain: docker.io
+  domain: gsoci.azurecr.io
 
 pod:
   user:
@@ -43,7 +43,7 @@ securityContext:
   allowPrivilegeEscalation: false
   capabilities:
     drop:
-    - ALL
+      - ALL
 
 serviceMonitor:
   enabled: true
