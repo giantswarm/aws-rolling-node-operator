@@ -8,7 +8,7 @@ require (
 	github.com/giantswarm/apiextensions/v6 v6.0.0
 	github.com/giantswarm/k8smetadata v0.16.1
 	github.com/giantswarm/microerror v0.4.0
-	github.com/go-logr/logr v1.2.2
+	github.com/go-logr/logr v1.4.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.1
 	golang.org/x/text v0.3.8
@@ -78,7 +78,7 @@ require (
 )
 
 replace (
-	github.com/go-logr/logr => github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr => github.com/go-logr/logr v1.4.2
 	github.com/gogo/protobuf v1.3.1 => github.com/gogo/protobuf v1.3.2
 	k8s.io/klog/v2 => k8s.io/klog/v2 v2.10.0
 )
