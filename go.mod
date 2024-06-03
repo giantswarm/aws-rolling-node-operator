@@ -7,7 +7,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/giantswarm/apiextensions/v6 v6.0.0
 	github.com/giantswarm/k8smetadata v0.16.1
-	github.com/giantswarm/microerror v0.4.0
+	github.com/giantswarm/microerror v0.4.1
 	github.com/go-logr/logr v1.2.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.1
@@ -38,7 +38,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
