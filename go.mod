@@ -3,7 +3,7 @@ module github.com/giantswarm/aws-rolling-node-operator
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.43.2
+	github.com/aws/aws-sdk-go v1.55.5
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/giantswarm/apiextensions/v6 v6.0.0
 	github.com/giantswarm/k8smetadata v0.16.1
