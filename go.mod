@@ -11,7 +11,7 @@ require (
 	github.com/go-logr/logr v1.2.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.1
-	golang.org/x/text v0.3.8
+	golang.org/x/text v0.19.0
 	k8s.io/api v0.23.2
 	k8s.io/apimachinery v0.23.2
 	k8s.io/client-go v0.23.2
