@@ -12,10 +12,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.1
 	golang.org/x/text v0.3.8
-	k8s.io/api v0.23.2
-	k8s.io/apimachinery v0.23.2
-	k8s.io/client-go v0.23.2
-	k8s.io/component-base v0.22.17
+	k8s.io/api v0.31.2
+	k8s.io/apimachinery v0.31.2
+	k8s.io/client-go v0.31.2
+	k8s.io/component-base v0.31.2
 	k8s.io/klog v1.0.0
 	sigs.k8s.io/controller-runtime v0.10.3
 )
@@ -80,5 +80,5 @@ require (
 replace (
 	github.com/go-logr/logr => github.com/go-logr/logr v0.4.0
 	github.com/gogo/protobuf v1.3.1 => github.com/gogo/protobuf v1.3.2
-	k8s.io/klog/v2 => k8s.io/klog/v2 v2.10.0
+	k8s.io/klog/v2 => k8s.io/klog/v2 v2.130.1
 )
