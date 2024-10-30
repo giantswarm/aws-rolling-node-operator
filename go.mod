@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.43.2
 	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/giantswarm/apiextensions/v6 v6.0.0
-	github.com/giantswarm/k8smetadata v0.16.1
+	github.com/giantswarm/k8smetadata v0.25.0
 	github.com/giantswarm/microerror v0.4.0
 	github.com/go-logr/logr v1.2.2
 	github.com/pkg/errors v0.9.1
