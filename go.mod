@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/aws/aws-sdk-go v1.43.2
-	github.com/cenkalti/backoff/v4 v4.1.2
+	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/giantswarm/apiextensions/v6 v6.0.0
 	github.com/giantswarm/k8smetadata v0.16.1
 	github.com/giantswarm/microerror v0.4.1
